@@ -87,9 +87,7 @@ env:
 
   # enable these to deploy on every push to `main`.
   # make sure to set up any enabled targets. Builds will ignore warnings.
-  # warning: If you use private repositories, this will eat through your available worker minutes quickly.
-  continuous_deployment_to_itch: false
-  continuous_deployment_to_github_pages: false
+  continuous_deployment_to_github_pages: true
 
 jobs:
   # forward some environment variables as outputs of this job.
@@ -101,8 +99,6 @@ jobs:
       - name: Do nothing
         run: "true"
     outputs:
-      itch_page: ${{ env.itch_page }}
-      continuous_deployment_to_itch: ${{ env.continuous_deployment_to_itch }}
       continuous_deployment_to_github_pages: ${{ env.continuous_deployment_to_github_pages }}
 
   # determine the version number for this workflow.
@@ -194,7 +190,7 @@ jobs:
 
           # Check if building for this platform is enabled.
           echo 'is_platform_enabled=${{
-            (matrix.platform == 'web' && (inputs.build_for_web || (github.event_name == 'push' && (env.continuous_deployment_to_itch == 'true' || env.continuous_deployment_to_github_pages == 'true')))) ||
+            (matrix.platform == 'web' && (inputs.build_for_web || (github.event_name == 'push' && env.continuous_deployment_to_github_pages == 'true'))) ||
             (matrix.platform == 'linux' && inputs.build_for_linux) ||
             (matrix.platform == 'windows' && inputs.build_for_windows) ||
             (matrix.platform == 'macos' && inputs.build_for_macos)
@@ -339,7 +335,9 @@ jobs:
   # deploy to GitHub Pages.
   deploy-to-github-pages:
     runs-on: ubuntu-latest
-    needs: build
+    needs:
+      - forward-env
+      - build
     permissions:
       # required to deploy to GitHub Pages.
       pages: write
