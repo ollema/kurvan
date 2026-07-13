@@ -1,10 +1,9 @@
-// Support configuring Bevy lints within code.
+// support configuring bevy lints within code.
 #![cfg_attr(bevy_lint, feature(register_tool), register_tool(bevy))]
-// Disable console on Windows for non-dev builds.
+// disable console on windows for non-dev builds.
 #![cfg_attr(not(feature = "dev"), windows_subsystem = "windows")]
 
 mod asset_tracking;
-mod audio;
 mod demo;
 #[cfg(feature = "dev")]
 mod dev_tools;
@@ -22,19 +21,19 @@ pub struct AppPlugin;
 
 impl Plugin for AppPlugin {
     fn build(&self, app: &mut App) {
-        // Add Bevy plugins.
+        // add bevy plugins.
         app.add_plugins(
             DefaultPlugins
                 .set(AssetPlugin {
-                    // Wasm builds will check for meta files (that don't exist) if this isn't set.
-                    // This causes errors and even panics on web build on itch.
-                    // See https://github.com/bevyengine/bevy_github_ci_template/issues/48.
+                    // wasm builds will check for meta files (that don't exist) if this isn't set.
+                    // this causes errors and even panics on web build on itch.
+                    // see https://github.com/bevyengine/bevy_github_ci_template/issues/48.
                     meta_check: AssetMetaCheck::Never,
                     ..default()
                 })
                 .set(WindowPlugin {
                     primary_window: Window {
-                        title: "Kurvan".to_string(),
+                        title: "akta kurvan!".to_string(),
                         fit_canvas_to_parent: true,
                         ..default()
                     }
@@ -43,10 +42,9 @@ impl Plugin for AppPlugin {
                 }),
         );
 
-        // Add other plugins.
+        // add other plugins.
         app.add_plugins((
             asset_tracking::plugin,
-            audio::plugin,
             demo::plugin,
             #[cfg(feature = "dev")]
             dev_tools::plugin,
@@ -55,7 +53,7 @@ impl Plugin for AppPlugin {
             theme::plugin,
         ));
 
-        // Order new `AppSystems` variants by adding them here:
+        // order new `AppSystems` variants by adding them here:
         app.configure_sets(
             Update,
             (
@@ -66,11 +64,11 @@ impl Plugin for AppPlugin {
                 .chain(),
         );
 
-        // Set up the `Pause` state.
+        // set up the `Pause` state.
         app.init_state::<Pause>();
         app.configure_sets(Update, PausableSystems.run_if(in_state(Pause(false))));
 
-        // Spawn the main camera.
+        // spawn the main camera.
         app.add_systems(Startup, spawn_camera);
     }
 }

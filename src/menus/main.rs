@@ -1,5 +1,3 @@
-//! The main menu (seen on the title screen).
-
 use bevy::prelude::*;
 
 use crate::{asset_tracking::ResourceHandles, menus::Menu, screens::Screen, theme::widget};

@@ -1,5 +1,3 @@
-//! The game's menus and transitions between them.
-
 mod credits;
 mod main;
 mod pause;

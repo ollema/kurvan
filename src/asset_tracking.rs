@@ -1,5 +1,3 @@
-//! A high-level way to load collections of asset handles as resources.
-
 use std::collections::VecDeque;
 
 use bevy::prelude::*;
@@ -41,8 +39,8 @@ type InsertLoadedResource = fn(&mut World, &UntypedHandle);
 
 #[derive(Resource, Default)]
 pub struct ResourceHandles {
-    // Use a queue for waiting assets so they can be cycled through and moved to
-    // `finished` one at a time.
+    // use a queue for waiting assets so they can be cycled through and moved to
+    // `finished` one at a time
     waiting: VecDeque<(UntypedHandle, InsertLoadedResource)>,
     finished: Vec<UntypedHandle>,
 }
