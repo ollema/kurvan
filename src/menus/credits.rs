@@ -33,13 +33,10 @@ fn created_by() -> impl Bundle {
 }
 
 fn assets() -> impl Bundle {
-    grid(vec![
-        ["Ducky sprite", "CC0 by Caz Creates Games"],
-        [
-            "Bevy logo",
-            "All rights reserved by the Bevy Foundation, permission granted for splash screen use when unmodified",
-        ],
-    ])
+    grid(vec![[
+        "Bevy logo",
+        "All rights reserved by the Bevy Foundation, permission granted for splash screen use when unmodified",
+    ]])
 }
 
 fn grid(content: Vec<[&'static str; 2]>) -> impl Bundle {
