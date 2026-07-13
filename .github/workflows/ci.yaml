@@ -15,7 +15,7 @@ env:
   RUSTFLAGS: -Dwarnings -Zshare-generics=y -Zthreads=0
   RUSTDOCFLAGS: -Dwarnings -Zshare-generics=y -Zthreads=0
   # use the same Rust toolchain across jobs so they can share a cache.
-  toolchain: nightly-2026-01-22
+  toolchain: nightly-2026-04-16
 
 jobs:
   # check formatting.
@@ -103,7 +103,8 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install Rust toolchain (plus bevy_lint)
-        uses: TheBevyFlock/bevy_cli/bevy_lint@lint-v0.6.0
+        # TODO: pin to lint-v0.7.0 once a bevy_lint release supports Bevy 0.19
+        uses: TheBevyFlock/bevy_cli/bevy_lint@main
         with:
           cache: true
           save-cache-if: ${{ github.ref == 'refs/heads/main' }}

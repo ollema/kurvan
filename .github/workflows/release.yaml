@@ -125,7 +125,6 @@ jobs:
       - get-version
     env:
       version: ${{ needs.get-version.outputs.version }}
-      # avoid rate-limiting. See: <https://github.com/cargo-bins/cargo-binstall/issues/2045>.
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     strategy:
       matrix:
@@ -342,7 +341,6 @@ jobs:
       # required to deploy to GitHub Pages.
       pages: write
       # required for GitHub Pages to verify the source of the deployment.
-      # see: <https://github.com/actions/deploy-pages/issues/329>.
       id-token: write
     environment:
       name: github-pages
