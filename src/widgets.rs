@@ -1,3 +1,6 @@
+//! Shared UI widget templates and their colors. Not a plugin — any plugin may
+//! use these, like the shared components and resources.
+
 use std::borrow::Cow;
 
 use bevy::{
@@ -5,10 +8,22 @@ use bevy::{
     prelude::*,
 };
 
-use crate::theme::{interaction::InteractionPalette, palette::*};
+use crate::prelude::*;
+
+/// #fcfbcc
+const HEADER_TEXT: Color = Color::srgb(0.988, 0.984, 0.800);
+
+/// #ececec
+const BUTTON_TEXT: Color = Color::srgb(0.925, 0.925, 0.925);
+/// #4666bf
+const BUTTON_BACKGROUND: Color = Color::srgb(0.275, 0.400, 0.750);
+/// #6299d1
+const BUTTON_HOVERED_BACKGROUND: Color = Color::srgb(0.384, 0.600, 0.820);
+/// #3d4999
+const BUTTON_PRESSED_BACKGROUND: Color = Color::srgb(0.239, 0.286, 0.600);
 
 /// A root UI node that fills the window and centers its content.
-pub fn ui_root(name: impl Into<Cow<'static, str>>) -> impl Bundle {
+pub(crate) fn ui_root(name: impl Into<Cow<'static, str>>) -> impl Bundle {
     (
         Name::new(name),
         Node {
@@ -26,8 +41,8 @@ pub fn ui_root(name: impl Into<Cow<'static, str>>) -> impl Bundle {
     )
 }
 
-/// A simple header label. Bigger than [`label`].
-pub fn header(text: impl Into<String>) -> impl Bundle {
+/// A simple header label.
+pub(crate) fn header(text: impl Into<String>) -> impl Bundle {
     (
         Name::new("Header"),
         Text(text.into()),
@@ -36,18 +51,8 @@ pub fn header(text: impl Into<String>) -> impl Bundle {
     )
 }
 
-/// A simple text label.
-pub fn label(text: impl Into<String>) -> impl Bundle {
-    (
-        Name::new("Label"),
-        Text(text.into()),
-        TextFont::from_font_size(24.0),
-        TextColor(LABEL_TEXT),
-    )
-}
-
 /// A large rounded button with text and an action defined as an [`Observer`].
-pub fn button<E, B, M, I>(text: impl Into<String>, action: I) -> impl Bundle
+pub(crate) fn button<E, B, M, I>(text: impl Into<String>, action: I) -> impl Bundle
 where
     E: EntityEvent,
     B: Bundle,
@@ -62,26 +67,6 @@ where
             align_items: AlignItems::Center,
             justify_content: JustifyContent::Center,
             border_radius: BorderRadius::MAX,
-            ..default()
-        },
-    )
-}
-
-/// A small square button with text and an action defined as an [`Observer`].
-pub fn button_small<E, B, M, I>(text: impl Into<String>, action: I) -> impl Bundle
-where
-    E: EntityEvent,
-    B: Bundle,
-    I: IntoObserverSystem<E, B, M>,
-{
-    button_base(
-        text,
-        action,
-        Node {
-            width: px(30),
-            height: px(30),
-            align_items: AlignItems::Center,
-            justify_content: JustifyContent::Center,
             ..default()
         },
     )

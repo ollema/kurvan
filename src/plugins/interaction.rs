@@ -1,20 +1,12 @@
 use bevy::prelude::*;
 
+use crate::prelude::*;
+
 pub(super) fn plugin(app: &mut App) {
     app.add_observer(apply_interaction_palette_on_click);
     app.add_observer(apply_interaction_palette_on_over);
     app.add_observer(apply_interaction_palette_on_out);
     app.add_observer(apply_interaction_palette_on_release);
-}
-
-/// Palette for widget interactions. Add this to an entity that supports
-/// [`Interaction`]s, such as a button, to change its [`BackgroundColor`] based
-/// on the current interaction state.
-#[derive(Component, Debug)]
-pub struct InteractionPalette {
-    pub none: Color,
-    pub hovered: Color,
-    pub pressed: Color,
 }
 
 fn apply_interaction_palette_on_click(

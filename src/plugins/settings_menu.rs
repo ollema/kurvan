@@ -1,6 +1,7 @@
 use bevy::{input::common_conditions::input_just_pressed, prelude::*};
 
-use crate::{menus::Menu, screens::Screen, theme::prelude::*};
+use crate::prelude::*;
+use crate::widgets;
 
 pub(super) fn plugin(app: &mut App) {
     app.add_systems(OnEnter(Menu::Settings), spawn_settings_menu);
@@ -12,13 +13,13 @@ pub(super) fn plugin(app: &mut App) {
 
 fn spawn_settings_menu(mut commands: Commands) {
     commands.spawn((
-        widget::ui_root("Settings Menu"),
+        widgets::ui_root("Settings Menu"),
         GlobalZIndex(2),
         DespawnOnExit(Menu::Settings),
         children![
-            widget::header("Settings"),
+            widgets::header("Settings"),
             settings_grid(),
-            widget::button("Back", go_back_on_click),
+            widgets::button("Back", go_back_on_click),
         ],
     ));
 }
@@ -37,22 +38,10 @@ fn settings_grid() -> impl Bundle {
     )
 }
 
-fn go_back_on_click(
-    _: On<Pointer<Click>>,
-    screen: Res<State<Screen>>,
-    mut next_menu: ResMut<NextState<Menu>>,
-) {
-    next_menu.set(if screen.get() == &Screen::Title {
-        Menu::Main
-    } else {
-        Menu::Pause
-    });
+fn go_back_on_click(_: On<Pointer<Click>>, mut next_menu: ResMut<NextState<Menu>>) {
+    next_menu.set(Menu::Main);
 }
 
-fn go_back(screen: Res<State<Screen>>, mut next_menu: ResMut<NextState<Menu>>) {
-    next_menu.set(if screen.get() == &Screen::Title {
-        Menu::Main
-    } else {
-        Menu::Pause
-    });
+fn go_back(mut next_menu: ResMut<NextState<Menu>>) {
+    next_menu.set(Menu::Main);
 }

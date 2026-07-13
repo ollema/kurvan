@@ -54,6 +54,9 @@ features = ["dev"]
 [lints.rust]
 # mark `bevy_lint` as a valid `cfg`, as it is set when the Bevy linter runs.
 unexpected_cfgs = { level = "warn", check-cfg = ["cfg(bevy_lint)"] }
+# only `AppPlugin` is part of the crate's public API; everything else should be
+# `pub(crate)` at most.
+unreachable_pub = "warn"
 
 [lints.clippy]
 # bevy supplies arguments to systems via dependency injection, so it's natural for systems to

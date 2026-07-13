@@ -1,22 +1,14 @@
 use bevy::prelude::*;
 
-use crate::game::player::{Controls, PlayerMesh, player};
-use crate::screens::Screen;
+use crate::prelude::*;
 use rand::RngExt;
 use std::f32::consts::TAU;
 
-/// Logical playfield size, centered on the origin. Independent of window size.
-#[derive(Resource)]
-pub struct Arena {
-    pub size: Vec2,
-}
+pub(super) fn plugin(app: &mut App) {
+    app.init_resource::<Arena>();
+    app.init_resource::<PlayerMesh>();
 
-impl Default for Arena {
-    fn default() -> Self {
-        Self {
-            size: Vec2::new(1120.0, 630.0),
-        }
-    }
+    app.add_systems(OnEnter(Screen::Gameplay), spawn_level);
 }
 
 /// No one spawns closer to the arena edge than this.
@@ -32,7 +24,7 @@ const PLAYER_CONFIGS: [(Color, KeyCode, KeyCode); 2] = [
 ];
 
 /// A system that spawns the level and all players.
-pub fn spawn_level(
+fn spawn_level(
     mut commands: Commands,
     arena: Res<Arena>,
     player_mesh: Res<PlayerMesh>,
@@ -65,4 +57,31 @@ pub fn spawn_level(
                 ));
             }
         });
+}
+
+/// The player character.
+fn player(
+    spawn_pos: Vec2,
+    spawn_angle: f32,
+    controls: Controls,
+    color: Color,
+    mesh: Handle<Mesh>,
+    materials: &mut Assets<ColorMaterial>,
+) -> impl Bundle {
+    (
+        Name::new("Player"),
+        Player,
+        Transform::from_translation(spawn_pos.extend(1.0)).with_scale(Vec2::splat(5.0).extend(1.0)),
+        SteeringState {
+            angle: spawn_angle,
+            speed: 100.0,
+            turn_rate: 3.5,
+        },
+        PhysicalPosition(spawn_pos),
+        PreviousPhysicalPosition(spawn_pos),
+        SteeringInput::default(),
+        controls,
+        Mesh2d(mesh),
+        MeshMaterial2d(materials.add(color)),
+    )
 }

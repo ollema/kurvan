@@ -4,7 +4,8 @@ use bevy::{
     prelude::*,
 };
 
-use crate::{FrameSystems, screens::Screen, theme::prelude::*};
+use crate::prelude::*;
+use crate::widgets;
 
 pub(super) fn plugin(app: &mut App) {
     // spawn splash screen.
@@ -47,7 +48,7 @@ const SPLASH_FADE_DURATION_SECS: f32 = 0.6;
 
 fn spawn_splash_screen(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn((
-        widget::ui_root("Splash Screen"),
+        widgets::ui_root("Splash Screen"),
         BackgroundColor(SPLASH_BACKGROUND_COLOR),
         DespawnOnExit(Screen::Splash),
         children![(
@@ -133,7 +134,7 @@ fn tick_splash_timer(time: Res<Time>, mut timer: ResMut<SplashTimer>) {
     timer.0.tick(time.delta());
 }
 
-fn check_splash_timer(timer: ResMut<SplashTimer>, mut next_screen: ResMut<NextState<Screen>>) {
+fn check_splash_timer(timer: Res<SplashTimer>, mut next_screen: ResMut<NextState<Screen>>) {
     if timer.0.just_finished() {
         next_screen.set(Screen::Title);
     }
