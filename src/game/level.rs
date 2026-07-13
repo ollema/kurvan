@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use crate::{
-    demo::player::{PlayerMesh, player},
+    game::player::{PlayerMesh, player},
     screens::Screen,
 };
 

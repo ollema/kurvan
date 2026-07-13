@@ -3,9 +3,9 @@
 // disable console on windows for non-dev builds.
 #![cfg_attr(not(feature = "dev"), windows_subsystem = "windows")]
 
-mod demo;
 #[cfg(feature = "dev")]
 mod dev_tools;
+mod game;
 mod menus;
 mod screens;
 mod theme;
@@ -43,7 +43,7 @@ impl Plugin for AppPlugin {
 
         // add other plugins.
         app.add_plugins((
-            demo::plugin,
+            game::plugin,
             #[cfg(feature = "dev")]
             dev_tools::plugin,
             menus::plugin,

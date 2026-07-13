@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::{
     AppSystems, PausableSystems,
-    demo::movement::{MovementController, ScreenWrap},
+    game::movement::{MovementController, ScreenWrap},
 };
 
 pub(super) fn plugin(app: &mut App) {
