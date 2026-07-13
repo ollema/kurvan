@@ -1,0 +1,115 @@
+[package]
+name = "kurvan"
+authors = ["Olle Månsson <31876997+ollema@users.noreply.github.com>"]
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+# use only features needed for a 2D game to improve compile time and size
+bevy = { version = "0.18", default-features = false, features = ["2d"] }
+rand = "0.9"
+# compile out low-severity logs to improve performance.
+# remove these features if you want to profile your game with tracy.
+# (see <https://github.com/bevyengine/bevy/blob/main/docs/profiling.md#tracy-profiler>)
+tracing = { version = "0.1", features = [
+    "max_level_debug",
+    "release_max_level_warn",
+] }
+
+[target.wasm32-unknown-unknown.dependencies]
+getrandom = { version = "0.3", features = ["wasm_js"] }
+
+[features]
+# default to a native dev build.
+default = ["dev_native"]
+dev = [
+    # improve compile times for dev builds by linking Bevy as a dynamic library.
+    "bevy/dynamic_linking",
+    "bevy/bevy_dev_tools",
+    "bevy/bevy_ui_debug",
+    # improve error messages coming from Bevy
+    "bevy/track_location",
+]
+dev_native = [
+    "dev",
+    # enable asset hot reloading for native dev builds.
+    "bevy/file_watcher",
+    # enable embedded asset hot reloading for native dev builds.
+    "bevy/embedded_watcher",
+]
+
+
+[package.metadata.bevy_cli.release]
+# disable dev features for release builds.
+default-features = false
+
+[package.metadata.bevy_cli.web]
+# disable native features for web builds.
+default-features = false
+
+[package.metadata.bevy_cli.web.dev]
+features = ["dev"]
+
+
+[lints.rust]
+# mark `bevy_lint` as a valid `cfg`, as it is set when the Bevy linter runs.
+unexpected_cfgs = { level = "warn", check-cfg = ["cfg(bevy_lint)"] }
+
+[lints.clippy]
+# bevy supplies arguments to systems via dependency injection, so it's natural for systems to
+# request more than 7 arguments, which would undesirably trigger this lint.
+too_many_arguments = "allow"
+# queries may access many components, which would undesirably trigger this lint.
+type_complexity = "allow"
+# make sure macros use their standard braces, such as `[]` for `bevy_ecs::children!`.
+nonstandard_macro_braces = "warn"
+
+# you can configure the warning levels of Bevy lints here. For a list of all lints, see:
+# <https://thebevyflock.github.io/bevy_cli/api/bevy_lint/lints/>
+[package.metadata.bevy_lint]
+# panicking_methods = "deny"
+# pedantic = "warn"
+
+
+# compile with performance optimizations:
+# <https://bevyengine.org/learn/quick-start/getting-started/setup/#compile-with-performance-optimizations>
+
+# enable a small amount of optimization in the dev profile.
+[profile.dev]
+opt-level = 1
+
+# enable a large amount of optimization in the dev profile for dependencies.
+[profile.dev.package."*"]
+opt-level = 3
+
+# remove expensive debug assertions due to <https://github.com/bevyengine/bevy/issues/14291>
+[profile.dev.package.wgpu-types]
+debug-assertions = false
+
+[profile.release]
+# compile the entire crate as one unit.
+# slows compile times, marginal improvements.
+codegen-units = 1
+# do a second optimization pass over the entire program, including dependencies.
+# slows compile times, marginal improvements.
+lto = "thin"
+
+# this profile will be used by `bevy run web` automatically.
+[profile.web-release]
+# default to release profile values.
+inherits = "release"
+# optimize with size in mind (also try "z", sometimes it is better).
+# slightly slows compile times, great improvements to file size and runtime performance.
+opt-level = "s"
+# strip all debugging information from the binary to slightly reduce file size.
+strip = "debuginfo"
+
+# optimize for build time in CI.
+[profile.ci]
+inherits = "dev"
+opt-level = 0
+debug = "line-tables-only"
+codegen-units = 4
+
+[profile.ci.package."*"]
+opt-level = 0

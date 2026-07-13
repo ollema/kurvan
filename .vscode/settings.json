@@ -1,0 +1,9 @@
+{
+    // allow `rust-analyzer` and `cargo` to run simultaneously.
+    // this uses extra storage space, so consider commenting it out.
+    "rust-analyzer.cargo.targetDir": true,
+    // display the directory of `mod.rs` files in the tab above the text editor.
+    "workbench.editor.customLabels.patterns": {
+        "**/mod.rs": "${dirname}/mod.rs"
+    }
+}
