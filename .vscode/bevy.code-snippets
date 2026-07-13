@@ -14,8 +14,7 @@
         "scope": "rust",
         "prefix": "component",
         "body": [
-            "#[derive(Component, Reflect, Debug)]",
-            "#[reflect(Component)]",
+            "#[derive(Component, Debug)]",
             "struct $1;"
         ]
     },
@@ -23,8 +22,7 @@
         "scope": "rust",
         "prefix": "resource",
         "body": [
-            "#[derive(Resource, Reflect, Debug, Default)]",
-            "#[reflect(Resource)]",
+            "#[derive(Resource, Debug, Default)]",
             "struct $1;"
         ]
     },

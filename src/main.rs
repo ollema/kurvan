@@ -51,13 +51,25 @@ impl Plugin for AppPlugin {
             theme::plugin,
         ));
 
-        // order new `AppSystems` variants by adding them here:
+        // configure frame update systems
         app.configure_sets(
             Update,
             (
-                AppSystems::TickTimers,
-                AppSystems::RecordInput,
-                AppSystems::Update,
+                FrameSystems::TickTimers,
+                FrameSystems::RecordInput,
+                FrameSystems::Update,
+            )
+                .chain(),
+        );
+
+        // configure fixed update systems
+        app.configure_sets(
+            FixedUpdate,
+            (
+                FixedSystems::ApplyEffects,
+                FixedSystems::Movement,
+                FixedSystems::Collide,
+                FixedSystems::Resolve,
             )
                 .chain(),
         );
@@ -65,23 +77,35 @@ impl Plugin for AppPlugin {
         // set up the `Pause` state.
         app.init_state::<Pause>();
         app.configure_sets(Update, PausableSystems.run_if(in_state(Pause(false))));
+        app.configure_sets(FixedUpdate, PausableSystems.run_if(in_state(Pause(false))));
 
         // spawn the main camera.
         app.add_systems(Startup, spawn_camera);
     }
 }
 
-/// High-level groupings of systems for the app in the `Update` schedule.
-/// When adding a new variant, make sure to order it in the `configure_sets`
-/// call above.
+/// Frame update systems
 #[derive(SystemSet, Debug, Clone, Copy, Eq, PartialEq, Hash, PartialOrd, Ord)]
-enum AppSystems {
+enum FrameSystems {
     /// Tick timers.
     TickTimers,
     /// Record player input.
     RecordInput,
     /// Do everything else (consider splitting this into further variants).
     Update,
+}
+
+/// Fixed update systems
+#[derive(SystemSet, Debug, Clone, Copy, Eq, PartialEq, Hash, PartialOrd, Ord)]
+enum FixedSystems {
+    /// Apply effects from (de)buffs derive new stats
+    ApplyEffects,
+    /// Turn, calculate new position, add trail segments
+    Movement,
+    /// Detect collisions and emit death events
+    Collide,
+    /// Apply deaths, scoring, round-over transition
+    Resolve,
 }
 
 /// Whether or not the game is paused.

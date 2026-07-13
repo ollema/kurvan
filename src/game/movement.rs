@@ -1,79 +1,89 @@
-//! Handle player input and translate it into movement through a character
-//! controller. A character controller is the collection of systems that govern
-//! the movement of characters.
-//!
-//! In our case, the character controller has the following logic:
-//! - Set [`MovementController`] intent based on directional keyboard input.
-//!   This is done in the `player` module, as it is specific to the player
-//!   character.
-//! - Apply movement based on [`MovementController`] intent and maximum speed.
-//! - Wrap the character within the window.
-//!
-//! Note that the implementation used here is limited for demonstration
-//! purposes. If you want to move the player in a smoother way,
-//! consider using a [fixed timestep](https://github.com/bevyengine/bevy/blob/main/examples/movement/physics_in_fixed_timestep.rs).
+use bevy::prelude::*;
 
-use bevy::{prelude::*, window::PrimaryWindow};
-
-use crate::{AppSystems, PausableSystems};
+use crate::{FixedSystems, PausableSystems, Pause};
 
 pub(super) fn plugin(app: &mut App) {
     app.add_systems(
-        Update,
-        (apply_movement, apply_screen_wrap)
-            .chain()
-            .in_set(AppSystems::Update)
-            .in_set(PausableSystems),
+        FixedUpdate,
+        steer.in_set(FixedSystems::Movement).in_set(PausableSystems),
+    );
+
+    app.add_systems(
+        RunFixedMainLoop,
+        interpolate_rendered_position
+            .in_set(RunFixedMainLoopSystems::AfterFixedMainLoop)
+            .run_if(in_state(Pause(false))),
     );
 }
 
-/// These are the movement parameters for our character controller.
-/// For now, this is only used for a single player, but it could power NPCs or
-/// other players as well.
-#[derive(Component, Reflect)]
-#[reflect(Component)]
-pub struct MovementController {
-    /// The direction the character wants to move in.
-    pub intent: Vec2,
-
-    /// Maximum speed in world units per second.
-    /// 1 world unit = 1 pixel when using the default 2D camera and no physics engine.
-    pub max_speed: f32,
+/// Steering state and stats.
+#[derive(Component)]
+pub struct Curve {
+    /// Heading in radians, ccw from +x.
+    pub angle: f32,
+    /// World units per second
+    pub speed: f32,
+    /// Radians per second. Turning radius is `speed / turn_rate`.
+    pub turn_rate: f32,
 }
 
-impl Default for MovementController {
-    fn default() -> Self {
-        Self {
-            intent: Vec2::ZERO,
-            // 400 pixels per second is a nice default, but we can still vary this per character.
-            max_speed: 400.0,
-        }
-    }
+/// Position.
+#[derive(Component)]
+pub struct PhysicalPosition(pub Vec2);
+
+/// Previous position (used for render interpolation).
+#[derive(Component)]
+pub struct PreviousPhysicalPosition(pub Vec2);
+
+/// Steering intent.
+#[derive(Component, Default, Clone, Copy, PartialEq, Eq)]
+pub enum TurnInput {
+    Left,
+    #[default]
+    Straight,
+    Right,
 }
 
-fn apply_movement(
+fn steer(
     time: Res<Time>,
-    mut movement_query: Query<(&MovementController, &mut Transform)>,
+    mut query: Query<(
+        &TurnInput,
+        &mut Curve,
+        &mut PhysicalPosition,
+        &mut PreviousPhysicalPosition,
+    )>,
 ) {
-    for (controller, mut transform) in &mut movement_query {
-        let velocity = controller.max_speed * controller.intent;
-        transform.translation += velocity.extend(0.0) * time.delta_secs();
+    let delta_time = time.delta_secs();
+
+    for (turn_input, mut curve, mut position, mut previous_position) in query.iter_mut() {
+        // update previous position
+        previous_position.0 = position.0;
+
+        // convert turn input into relative direction
+        let direction = match turn_input {
+            TurnInput::Left => 1.0,
+            TurnInput::Straight => 0.0,
+            TurnInput::Right => -1.0,
+        };
+
+        // update curve angle based on direction, turn rate and advancement of time
+        curve.angle += direction * curve.turn_rate * delta_time;
+
+        // update position based on speed, direction and advancement of time
+        position.0 += curve.speed * Vec2::from_angle(curve.angle) * delta_time;
     }
 }
 
-#[derive(Component, Reflect)]
-#[reflect(Component)]
-pub struct ScreenWrap;
-
-fn apply_screen_wrap(
-    window: Single<&Window, With<PrimaryWindow>>,
-    mut wrap_query: Query<&mut Transform, With<ScreenWrap>>,
+fn interpolate_rendered_position(
+    fixed_time: Res<Time<Fixed>>,
+    mut query: Query<(&PhysicalPosition, &PreviousPhysicalPosition, &mut Transform)>,
 ) {
-    let size = window.size() + 16.0;
-    let half_size = size / 2.0;
-    for mut transform in &mut wrap_query {
-        let position = transform.translation.xy();
-        let wrapped = (position + half_size).rem_euclid(size) - half_size;
-        transform.translation = wrapped.extend(transform.translation.z);
+    let alpha = fixed_time.overstep_fraction();
+
+    for (position, previous_position, mut transform) in query.iter_mut() {
+        // interpolate rendered/virtual position based on overstep
+        let interpolated_position = previous_position.0.lerp(position.0, alpha);
+        // keep current z
+        transform.translation = interpolated_position.extend(transform.translation.z);
     }
 }

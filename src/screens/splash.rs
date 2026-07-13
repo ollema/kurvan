@@ -4,7 +4,7 @@ use bevy::{
     prelude::*,
 };
 
-use crate::{AppSystems, screens::Screen, theme::prelude::*};
+use crate::{FrameSystems, screens::Screen, theme::prelude::*};
 
 pub(super) fn plugin(app: &mut App) {
     // spawn splash screen.
@@ -15,8 +15,8 @@ pub(super) fn plugin(app: &mut App) {
     app.add_systems(
         Update,
         (
-            tick_fade_in_out.in_set(AppSystems::TickTimers),
-            apply_fade_in_out.in_set(AppSystems::Update),
+            tick_fade_in_out.in_set(FrameSystems::TickTimers),
+            apply_fade_in_out.in_set(FrameSystems::Update),
         )
             .run_if(in_state(Screen::Splash)),
     );
@@ -27,8 +27,8 @@ pub(super) fn plugin(app: &mut App) {
     app.add_systems(
         Update,
         (
-            tick_splash_timer.in_set(AppSystems::TickTimers),
-            check_splash_timer.in_set(AppSystems::Update),
+            tick_splash_timer.in_set(FrameSystems::TickTimers),
+            check_splash_timer.in_set(FrameSystems::Update),
         )
             .run_if(in_state(Screen::Splash)),
     );
@@ -79,8 +79,7 @@ fn spawn_splash_screen(mut commands: Commands, asset_server: Res<AssetServer>) {
     ));
 }
 
-#[derive(Component, Reflect)]
-#[reflect(Component)]
+#[derive(Component)]
 struct ImageNodeFadeInOut {
     /// Total duration in seconds.
     total_duration: f32,
@@ -113,8 +112,7 @@ fn apply_fade_in_out(mut animation_query: Query<(&ImageNodeFadeInOut, &mut Image
     }
 }
 
-#[derive(Resource, Debug, Clone, PartialEq, Reflect)]
-#[reflect(Resource)]
+#[derive(Resource, Debug, Clone, PartialEq)]
 struct SplashTimer(Timer);
 
 impl Default for SplashTimer {

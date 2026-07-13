@@ -1,18 +1,15 @@
 use bevy::prelude::*;
 
-use crate::{
-    AppSystems, PausableSystems,
-    game::movement::{MovementController, ScreenWrap},
-};
+use crate::game::movement::{Curve, PhysicalPosition, PreviousPhysicalPosition, TurnInput};
+use crate::{FrameSystems, PausableSystems};
 
 pub(super) fn plugin(app: &mut App) {
     app.init_resource::<PlayerMesh>();
 
-    // record directional input as movement controls.
     app.add_systems(
         Update,
-        record_player_directional_input
-            .in_set(AppSystems::RecordInput)
+        record_turn_input
+            .in_set(FrameSystems::RecordInput)
             .in_set(PausableSystems),
     );
 }
@@ -30,54 +27,52 @@ impl FromWorld for PlayerMesh {
 
 /// The player character.
 pub fn player(
-    max_speed: f32,
+    spawn_pos: Vec2,
+    spawn_angle: f32,
+    controls: Controls,
+    color: Color,
     mesh: Handle<Mesh>,
     materials: &mut Assets<ColorMaterial>,
-    color: Color,
 ) -> impl Bundle {
     (
         Name::new("Player"),
         Player,
+        Transform::from_translation(spawn_pos.extend(1.0)).with_scale(Vec2::splat(5.0).extend(1.0)),
+        Curve {
+            angle: spawn_angle,
+            speed: 100.0,
+            turn_rate: 3.5,
+        },
+        PhysicalPosition(spawn_pos),
+        PreviousPhysicalPosition(spawn_pos),
+        TurnInput::default(),
+        controls,
         Mesh2d(mesh),
         MeshMaterial2d(materials.add(color)),
-        Transform::from_scale(Vec2::splat(5.0).extend(1.0)),
-        MovementController {
-            max_speed,
-            ..default()
-        },
-        ScreenWrap,
     )
 }
 
-#[derive(Component, Debug, Clone, Copy, PartialEq, Eq, Default, Reflect)]
-#[reflect(Component)]
+#[derive(Component, Debug, Clone, Copy, PartialEq, Eq, Default)]
 struct Player;
 
-fn record_player_directional_input(
+/// Keybindings for one player.
+#[derive(Component, Clone, Copy)]
+pub struct Controls {
+    pub left: KeyCode,
+    pub right: KeyCode,
+}
+
+fn record_turn_input(
     input: Res<ButtonInput<KeyCode>>,
-    mut controller_query: Query<&mut MovementController, With<Player>>,
+    mut query: Query<(&Controls, &mut TurnInput)>,
 ) {
-    // collect directional input.
-    let mut intent = Vec2::ZERO;
-    if input.pressed(KeyCode::KeyW) || input.pressed(KeyCode::ArrowUp) {
-        intent.y += 1.0;
-    }
-    if input.pressed(KeyCode::KeyS) || input.pressed(KeyCode::ArrowDown) {
-        intent.y -= 1.0;
-    }
-    if input.pressed(KeyCode::KeyA) || input.pressed(KeyCode::ArrowLeft) {
-        intent.x -= 1.0;
-    }
-    if input.pressed(KeyCode::KeyD) || input.pressed(KeyCode::ArrowRight) {
-        intent.x += 1.0;
-    }
-
-    // normalize intent so that diagonal movement is the same speed as horizontal / vertical.
-    // this should be omitted if the input comes from an analog stick instead.
-    let intent = intent.normalize_or_zero();
-
-    // apply movement intent to controllers.
-    for mut controller in &mut controller_query {
-        controller.intent = intent;
+    for (controls, mut turn_input) in query.iter_mut() {
+        let left = input.pressed(controls.left);
+        let right = input.pressed(controls.right);
+        *turn_input = match (left, right) {
+            (true, false) => TurnInput::Left,
+            (false, true) => TurnInput::Right,
+            _ => TurnInput::Straight,
+        }
     }
 }
